@@ -32,8 +32,8 @@ namespace DifferentlyOutfitted
 
         private static readonly SimpleCurve InsulationScoreCurve = new SimpleCurve
         {
-            new CurvePoint(-10f, -MaxInsulationScore),
-            new CurvePoint(-5f, -0.6f * MaxInsulationScore),
+            new CurvePoint(-10f, -10 * MaxInsulationScore),
+            new CurvePoint(-5f, -6f * MaxInsulationScore),
             new CurvePoint(0f, 0),
             new CurvePoint(5f, 0.6f * MaxInsulationScore),
             new CurvePoint(10f, MaxInsulationScore)
@@ -48,13 +48,15 @@ namespace DifferentlyOutfitted
                 Log.ErrorOnce("DifferentlyOutfitted: Not an ExtendedOutfit, something went wrong.", 399441);
                 return 0f;
             }
-            #if DEBUG
-            Log.Message($"DifferentlyOutfitted: ----- '{pawn.Name}' - '{apparel.def.defName}' ({apparel.Label}) -----",
-                true);
-            #endif
+            if (Prefs.DevMode)
+            {
+                Log.Message(
+                    $"DifferentlyOutfitted: ----- '{pawn.Name}' - '{apparel.def.defName}' ({apparel.Label}) -----",
+                    true);
+            }
             var statPriorities =
                 StatPriorityHelper.CalculateStatPriorities(pawn, outfit.StatPriorities, outfit.AutoWorkPriorities);
-            var score = ApparelScoreRawPriorities(apparel, statPriorities);
+            var score = 0.1f + apparel.def.apparel.scoreOffset + ApparelScoreRawPriorities(apparel, statPriorities);
             ApplyHitPointsScoring(apparel, ref score);
             ApplySpecialScoring(apparel, ref score);
             ApplyInsulationScoring(pawn, apparel, outfit, ref score);
@@ -62,12 +64,13 @@ namespace DifferentlyOutfitted
             ApplyHumanLeatherScoring(pawn, apparel, ref score);
             ApplyGenderScoring(pawn, apparel, ref score);
             ApplyRoyalTitleScoring(pawn, apparel, ref score);
-            #if DEBUG
-            Log.Message($"DifferentlyOutfitted: Total score of '{apparel.Label}' for pawn '{pawn.Name}' = {score}",
-                true);
-            Log.Message("DifferentlyOutfitted: -----------------------------------------------------------------",
-                true);
-            #endif
+            if (Prefs.DevMode)
+            {
+                Log.Message($"DifferentlyOutfitted: Total score of '{apparel.Label}' for pawn '{pawn.Name}' = {score}",
+                    true);
+                Log.Message("DifferentlyOutfitted: -----------------------------------------------------------------",
+                    true);
+            }
             return score;
         }
 
@@ -83,20 +86,22 @@ namespace DifferentlyOutfitted
                 var normalizedValue = OutfitStatHelper.NormalizeStatValue(statPriority.Stat, totalValue);
                 var statScore = normalizedValue * statPriority.Weight;
                 statScores.Add(statPriority.Stat, statScore);
-                #if DEBUG
-                if (Math.Abs(statScore) > 0.0001)
+                if (Prefs.DevMode)
                 {
-                    var statRange = OutfitStatHelper.StatRanges[statPriority.Stat];
-                    Log.Message(
-                        $"DifferentlyOutfitted: Value of stat {statPriority.Stat} ({statPriority.Weight}) [{statRange.min},{statRange.max}] = {totalValue} ({normalizedValue} norm) ({statPriority.Stat.defaultBaseValue} def) ({statScore} score)",
-                        true);
+                    if (Math.Abs(statScore) > 0.01)
+                    {
+                        var statRange = OutfitStatHelper.StatRanges[statPriority.Stat];
+                        Log.Message(
+                            $"DifferentlyOutfitted: Value of stat {statPriority.Stat} ({statPriority.Weight}) [{statRange.min},{statRange.max}] = {totalValue} ({normalizedValue} norm) ({statPriority.Stat.defaultBaseValue} def) ({statScore} score)",
+                            true);
+                    }
                 }
-                #endif
             }
             var apparelScore = !statScores.Any() ? 0 : statScores.Sum(pair => pair.Value);
-            #if DEBUG
-            Log.Message($"DifferentlyOutfitted: Stat score of {apparel.Label} = {apparelScore}", true);
-            #endif
+            if (Prefs.DevMode)
+            {
+                Log.Message($"DifferentlyOutfitted: Stat score of {apparel.Label} = {apparelScore}", true);
+            }
             return apparelScore;
         }
 
@@ -113,9 +118,10 @@ namespace DifferentlyOutfitted
             if (!apparel.def.useHitPoints) { return; }
             var hitPointsScoreCoefficient =
                 HitPointsPercentScoreFactorCurve.Evaluate((float) apparel.HitPoints / apparel.MaxHitPoints);
-            #if DEBUG
-            Log.Message($"DifferentlyOutfitted: Hit point score coefficient = {hitPointsScoreCoefficient}", true);
-            #endif
+            if (Prefs.DevMode)
+            {
+                Log.Message($"DifferentlyOutfitted: Hit point score coefficient = {hitPointsScoreCoefficient}", true);
+            }
             score *= hitPointsScoreCoefficient;
         }
 
@@ -124,26 +130,20 @@ namespace DifferentlyOutfitted
             if (apparel.Stuff != ThingDefOf.Human.race.leatherDef) { return; }
             if (ThoughtUtility.CanGetThought_NewTemp(pawn, ThoughtDefOf.HumanLeatherApparelSad))
             {
-                #if DEBUG
-                Log.Message("DifferentlyOutfitted: Penalizing human leather apparel", true);
-                #endif
+                if (Prefs.DevMode) { Log.Message("DifferentlyOutfitted: Penalizing human leather apparel", true); }
                 score -= HumanLeatherScorePenalty;
                 if (score > 0f) { score *= HumanLeatherScoreFactor; }
             }
             if (ThoughtUtility.CanGetThought_NewTemp(pawn, ThoughtDefOf.HumanLeatherApparelHappy))
             {
-                #if DEBUG
-                Log.Message("DifferentlyOutfitted: Promoting human leather apparel", true);
-                #endif
+                if (Prefs.DevMode) { Log.Message("DifferentlyOutfitted: Promoting human leather apparel", true); }
                 score += HumanLeatherScoreBonus;
             }
         }
 
         private static void ApplyInsulationScoring(Pawn pawn, Apparel apparel, ExtendedOutfit outfit, ref float score)
         {
-            #if DEBUG
-            Log.Message("DifferentlyOutfitted: Calculating scores for insulation", true);
-            #endif
+            if (Prefs.DevMode) { Log.Message("DifferentlyOutfitted: Calculating scores for insulation", true); }
             if (pawn.apparel.WornApparel.Contains(apparel)) { score += 0f; }
             else
             {
@@ -202,14 +202,15 @@ namespace DifferentlyOutfitted
                             targetRange.max - currentRange.max
                             : 0;
                 insulationScore += InsulationScoreCurve.Evaluate(heatBenefit);
-                #if DEBUG
-                Log.Message(
-                    $"DifferentlyOutfitted: target range: {targetRange}, current range: {currentRange}, candidate range: {candidateRange}",
-                    true);
-                Log.Message(
-                    $"DifferentlyOutfitted: cold benefit = {coldBenefit}, heat benefit = {heatBenefit}), insulation score = {insulationScore}",
-                    true);
-                #endif
+                if (Prefs.DevMode)
+                {
+                    Log.Message(
+                        $"DifferentlyOutfitted: target range: {targetRange}, current range: {currentRange}, candidate range: {candidateRange}",
+                        true);
+                    Log.Message(
+                        $"DifferentlyOutfitted: cold benefit = {coldBenefit}, heat benefit = {heatBenefit}), insulation score = {insulationScore}",
+                        true);
+                }
                 score += insulationScore;
             }
         }
@@ -249,9 +250,10 @@ namespace DifferentlyOutfitted
         private static void ApplySpecialScoring(Apparel apparel, ref float score)
         {
             var specialApparelScoreOffset = apparel.GetSpecialApparelScoreOffset();
-            #if DEBUG
-            Log.Message($"DifferentlyOutfitted: Special apparel score offset = {specialApparelScoreOffset}", true);
-            #endif
+            if (Prefs.DevMode)
+            {
+                Log.Message($"DifferentlyOutfitted: Special apparel score offset = {specialApparelScoreOffset}", true);
+            }
             score += specialApparelScoreOffset;
         }
 
@@ -259,9 +261,7 @@ namespace DifferentlyOutfitted
         {
             if (!outfit.PenaltyWornByCorpse || !apparel.WornByCorpse ||
                 !ThoughtUtility.CanGetThought_NewTemp(pawn, ThoughtDefOf.DeadMansApparel)) { return; }
-            #if DEBUG
-            Log.Message("DifferentlyOutfitted: Penalizing tainted apparel", true);
-            #endif
+            if (Prefs.DevMode) { Log.Message("DifferentlyOutfitted: Penalizing tainted apparel", true); }
             score -= TaintedApparelScorePenalty;
             if (score > 0f) { score *= TaintedApparelScoreFactor; }
         }

@@ -8,6 +8,7 @@ namespace DifferentlyOutfitted
 {
     internal static class OutfitStatHelper
     {
+        private const double Tolerance = 0.01;
         public static readonly Dictionary<StatDef, FloatRange> StatRanges = new Dictionary<StatDef, FloatRange>();
 
         private static FloatRange CalculateStatRange(StatDef stat)
@@ -29,7 +30,7 @@ namespace DifferentlyOutfitted
                     var statOffset = apparel.equippedStatOffsets?.Find(sm => sm.stat == stat);
                     if (statOffset != null) { statOffsetValue = statOffset.value; }
                     var totalStatValue = baseStatValue + statOffsetValue - stat.defaultBaseValue;
-                    if (Math.Abs(statRange.min) < 0.0001 && Math.Abs(statRange.max) < 0.0001)
+                    if (Math.Abs(statRange.min) < Tolerance && Math.Abs(statRange.max) < Tolerance)
                     {
                         statRange.min = totalStatValue;
                         statRange.max = totalStatValue;
@@ -54,7 +55,7 @@ namespace DifferentlyOutfitted
         {
             var statRange = StatRanges.ContainsKey(stat) ? StatRanges[stat] : CalculateStatRange(stat);
             var valueDeviation = value - stat.defaultBaseValue;
-            if (Math.Abs(statRange.min - statRange.max) < 0.0001)
+            if (Math.Abs(statRange.min - statRange.max) < Tolerance)
             {
                 statRange.min = valueDeviation;
                 statRange.max = valueDeviation;
@@ -62,7 +63,7 @@ namespace DifferentlyOutfitted
             }
             if (statRange.min > valueDeviation) { statRange.min = valueDeviation; }
             if (statRange.max < valueDeviation) { statRange.max = valueDeviation; }
-            if (Math.Abs(valueDeviation) < 0.0001) { return 0; }
+            if (Math.Abs(valueDeviation) < Tolerance) { return 0; }
             if (statRange.min < 0 && statRange.max < 0)
             {
                 return -1 + (valueDeviation - statRange.min) / (statRange.max - statRange.min);

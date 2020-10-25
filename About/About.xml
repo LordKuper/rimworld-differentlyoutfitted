@@ -23,5 +23,8 @@
     <li>brrainz.harmony</li>
     <li>notfood.Outfitted</li>
   </loadAfter>
+  <incompatibleWith>
+    <li>LordKuper.OutfitManager</li>
+  </incompatibleWith>
   <description>Alternative apparel scoring for 'Outfitted' by Charlotte aka notfood</description>
 </ModMetaData>

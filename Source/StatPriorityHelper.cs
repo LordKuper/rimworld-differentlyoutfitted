@@ -13,16 +13,11 @@ namespace DifferentlyOutfitted
         {
             var originalStatPriorities = statPriorities.ToList();
             if (!Enumerable.Any(originalStatPriorities)) { return originalStatPriorities; }
-            #if DEBUG
-            Log.Message($"DifferentlyOutfitted: Normalizing stat priorities (autoWorkPriorities = {autoWorkPriorities})",
-                true);
-            #endif
             var normalizedStatPriorities = originalStatPriorities
                 .Select(statPriority => new StatPriority(statPriority.Stat, statPriority.Weight)).ToList();
-            List<StatPriority> workStatPriorities = null;
             if (autoWorkPriorities)
             {
-                workStatPriorities = WorkPriorities.WorktypeStatPriorities(pawn).ToList();
+                var workStatPriorities = WorkPriorities.WorktypeStatPriorities(pawn).ToList();
                 foreach (var workStatPriority in workStatPriorities)
                 {
                     var sourceStatPriority = normalizedStatPriorities.Find(o => o.Stat == workStatPriority.Stat);
@@ -34,20 +29,6 @@ namespace DifferentlyOutfitted
                 }
             }
             NormalizeStatPriorities(normalizedStatPriorities);
-            #if DEBUG
-            Log.Message("DifferentlyOutfitted: Normalized stat priorities -----", true);
-            foreach (var statPriority in normalizedStatPriorities)
-            {
-                var originalWeight = originalStatPriorities.Find(o => o.Stat == statPriority.Stat)?.Weight ?? 0;
-                var workWeight = autoWorkPriorities
-                    ? workStatPriorities.Find(o => o.Stat == statPriority.Stat)?.Weight ?? 0
-                    : 0;
-                Log.Message(
-                    $"DifferentlyOutfitted: {statPriority.Stat.defName} = {statPriority.Weight} ({originalWeight} original) ({workWeight} work)",
-                    true);
-            }
-            Log.Message("DifferentlyOutfitted: ------------------------------", true);
-            #endif
             return normalizedStatPriorities;
         }
 
