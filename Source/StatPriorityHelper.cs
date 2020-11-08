@@ -12,10 +12,10 @@ namespace DifferentlyOutfitted
         private const double Tolerance = 0.01;
 
         public static IEnumerable<StatPriority> CalculateStatPriorities(Pawn pawn,
-            IEnumerable<StatPriority> statPriorities, bool autoWorkPriorities)
+            IEnumerable<StatPriority> outfitStatPriorities, bool autoWorkPriorities)
         {
-            var originalStatPriorities = statPriorities.ToList();
-            if (!originalStatPriorities.Any()) { return originalStatPriorities; }
+            var originalStatPriorities = outfitStatPriorities.ToList();
+            if (!originalStatPriorities.Any() && !autoWorkPriorities) { return originalStatPriorities; }
             var normalizedStatPriorities = originalStatPriorities
                 .Select(statPriority => new StatPriority(statPriority.Stat, statPriority.Weight)).ToList();
             if (autoWorkPriorities)

@@ -32,12 +32,14 @@ namespace DifferentlyOutfitted
 
         private static readonly SimpleCurve InsulationScoreCurve = new SimpleCurve
         {
-            new CurvePoint(-10f, -10 * MaxInsulationScore),
+            new CurvePoint(-10f, -MaxInsulationScore),
             new CurvePoint(-5f, -6f * MaxInsulationScore),
             new CurvePoint(0f, 0),
             new CurvePoint(5f, 0.6f * MaxInsulationScore),
             new CurvePoint(10f, MaxInsulationScore)
         };
+
+        private static StatRangesWorldComponent StatRanges => Find.World.GetComponent<StatRangesWorldComponent>();
 
         public static float ApparelScoreRaw(Pawn pawn, Apparel apparel)
         {
@@ -66,7 +68,8 @@ namespace DifferentlyOutfitted
             ApplyRoyalTitleScoring(pawn, apparel, ref score);
             if (Prefs.DevMode)
             {
-                Log.Message($"DifferentlyOutfitted: Total score of '{apparel.Label}' for pawn '{pawn.Name}' = {score}",
+                Log.Message(
+                    $"DifferentlyOutfitted: Total score of '{apparel.Label}' for pawn '{pawn.Name}' = {score:N2}",
                     true);
                 Log.Message("DifferentlyOutfitted: -----------------------------------------------------------------",
                     true);
@@ -83,16 +86,17 @@ namespace DifferentlyOutfitted
                 var statValue = apparel.GetStatValue(statPriority.Stat);
                 var statOffset = apparel.def.equippedStatOffsets.GetStatOffsetFromList(statPriority.Stat);
                 var totalValue = statValue + statOffset;
-                var normalizedValue = OutfitStatHelper.NormalizeStatValue(statPriority.Stat, totalValue);
+                var valueDeviation = totalValue - statPriority.Stat.defaultBaseValue;
+                var normalizedValue = StatRanges.NormalizeStatValue(statPriority.Stat, valueDeviation);
                 var statScore = normalizedValue * statPriority.Weight;
                 statScores.Add(statPriority.Stat, statScore);
                 if (Prefs.DevMode)
                 {
                     if (Math.Abs(statScore) > 0.01)
                     {
-                        var statRange = OutfitStatHelper.StatRanges[statPriority.Stat];
+                        var range = StatRanges.StatValues[statPriority.Stat];
                         Log.Message(
-                            $"DifferentlyOutfitted: Value of stat {statPriority.Stat} ({statPriority.Weight}) [{statRange.min},{statRange.max}] = {totalValue} ({normalizedValue} norm) ({statPriority.Stat.defaultBaseValue} def) ({statScore} score)",
+                            $"DifferentlyOutfitted: Value of '{statPriority.Stat}' ({statPriority.Weight:N2}) [{range.min:N2},{range.max:N2}] = {statValue:N2} + {statOffset:N2} = {totalValue:N2} ({valueDeviation:N2} dev) ({normalizedValue:N2} norm) ({statPriority.Stat.defaultBaseValue:N2} def) ({statScore:N2} score)",
                             true);
                     }
                 }
@@ -100,7 +104,7 @@ namespace DifferentlyOutfitted
             var apparelScore = !statScores.Any() ? 0 : statScores.Sum(pair => pair.Value);
             if (Prefs.DevMode)
             {
-                Log.Message($"DifferentlyOutfitted: Stat score of {apparel.Label} = {apparelScore}", true);
+                Log.Message($"DifferentlyOutfitted: Stat score of {apparel.Label} = {apparelScore:N2}", true);
             }
             return apparelScore;
         }
@@ -120,7 +124,8 @@ namespace DifferentlyOutfitted
                 HitPointsPercentScoreFactorCurve.Evaluate((float) apparel.HitPoints / apparel.MaxHitPoints);
             if (Prefs.DevMode)
             {
-                Log.Message($"DifferentlyOutfitted: Hit point score coefficient = {hitPointsScoreCoefficient}", true);
+                Log.Message($"DifferentlyOutfitted: Hit point score coefficient = {hitPointsScoreCoefficient:N2}",
+                    true);
             }
             score *= hitPointsScoreCoefficient;
         }
@@ -208,7 +213,7 @@ namespace DifferentlyOutfitted
                         $"DifferentlyOutfitted: target range: {targetRange}, current range: {currentRange}, candidate range: {candidateRange}",
                         true);
                     Log.Message(
-                        $"DifferentlyOutfitted: cold benefit = {coldBenefit}, heat benefit = {heatBenefit}), insulation score = {insulationScore}",
+                        $"DifferentlyOutfitted: cold benefit = {coldBenefit:N2}, heat benefit = {heatBenefit:N2}), insulation score = {insulationScore:N2}",
                         true);
                 }
                 score += insulationScore;
@@ -252,7 +257,8 @@ namespace DifferentlyOutfitted
             var specialApparelScoreOffset = apparel.GetSpecialApparelScoreOffset();
             if (Prefs.DevMode)
             {
-                Log.Message($"DifferentlyOutfitted: Special apparel score offset = {specialApparelScoreOffset}", true);
+                Log.Message($"DifferentlyOutfitted: Special apparel score offset = {specialApparelScoreOffset:N2}",
+                    true);
             }
             score += specialApparelScoreOffset;
         }

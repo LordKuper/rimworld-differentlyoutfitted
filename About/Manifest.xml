@@ -2,7 +2,7 @@
 
 <Manifest>
   <identifier>LordKuper.DifferentlyOutfitted</identifier>
-  <version>1.2.1.0</version>
+  <version>1.2.3.0</version>
   <dependencies>
     <li>notfood.Outfitted &gt;= 0.1</li>
   </dependencies>
