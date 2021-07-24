@@ -10,7 +10,7 @@ namespace DifferentlyOutfitted
 {
     public static class ApparelScoreCalculator
     {
-        private const float AllowedRoyaltyApparelScoreFactor = 10f;
+        private const float AllowedApparelScoreFactor = 10f;
         public const float ApparelTotalStatWeight = 10;
         private const float HumanLeatherScoreBonus = 0.2f;
         private const float HumanLeatherScoreFactor = 0.2f;
@@ -18,9 +18,11 @@ namespace DifferentlyOutfitted
         private const float IncorrectGenderApparelScoreFactor = 0.01f;
         private const float LowQualityApparelScoreFactor = 0.25f;
         private const float MaxInsulationScore = 2;
-        private const float RequiredRoyaltyApparelScoreFactor = 25f;
+        private const float RequiredApparelScoreFactor = 25f;
+        private const float SlaveApparelScorePenalty = 1.0f;
         private const float TaintedApparelScoreFactor = 0.2f;
         private const float TaintedApparelScorePenalty = 1.0f;
+        private const float VisionBlockingApparelScorePenalty = 1.0f;
 
         private static readonly SimpleCurve HitPointsPercentScoreFactorCurve = new SimpleCurve
         {
@@ -58,11 +60,14 @@ namespace DifferentlyOutfitted
             var score = 0.1f + apparel.def.apparel.scoreOffset + ApparelScoreRawPriorities(apparel, statPriorities);
             ApplyHitPointsScoring(apparel, ref score);
             ApplySpecialScoring(apparel, ref score);
+            ApplyVisionBlockingScoring(apparel, ref score);
             ApplyInsulationScoring(pawn, apparel, outfit, ref score);
             ApplyTaintedScoring(pawn, apparel, outfit, ref score);
             ApplyHumanLeatherScoring(pawn, apparel, ref score);
             ApplyGenderScoring(pawn, apparel, ref score);
-            ApplyRoyalTitleScoring(pawn, apparel, ref score);
+            ApplyRequirementScoring(pawn, apparel, ref score);
+            ApplyQualityScoring(pawn, apparel, ref score);
+            ApplySlaveScoring(pawn, apparel, ref score);
             #if DEBUG
             Log.Message($"DifferentlyOutfitted: Total score of '{apparel.Label}' for pawn '{pawn.Name}' = {score:N2}");
             Log.Message("DifferentlyOutfitted: -----------------------------------------------------------------");
@@ -211,36 +216,40 @@ namespace DifferentlyOutfitted
             }
         }
 
-        private static void ApplyRoyalTitleScoring(Pawn pawn, Thing apparel, ref float score)
+        private static void ApplyQualityScoring(Pawn pawn, Thing apparel, ref float score)
         {
-            if (pawn.royalty == null || pawn.royalty.AllTitlesInEffectForReading.Count <= 0) { return; }
-            var allowedApparels = new HashSet<ThingDef>();
-            var requiredApparels = new HashSet<ThingDef>();
-            var bodyPartGroups = new HashSet<BodyPartGroupDef>();
+            if (pawn.royalty == null || !pawn.royalty.AllTitlesInEffectForReading.Any()) { return; }
             var qualityCategory = QualityCategory.Awful;
-            foreach (var royalTitle in pawn.royalty.AllTitlesInEffectForReading)
+            foreach (var royalTitle in pawn.royalty.AllTitlesInEffectForReading.Where(royalTitle =>
+                royalTitle.def.requiredMinimumApparelQuality > qualityCategory))
             {
-                if (royalTitle.def.requiredApparel != null)
-                {
-                    foreach (var requirement in royalTitle.def.requiredApparel)
-                    {
-                        allowedApparels.AddRange(requirement.AllAllowedApparelForPawn(pawn, includeWorn: true));
-                        requiredApparels.AddRange(requirement.AllRequiredApparelForPawn(pawn, includeWorn: true));
-                        bodyPartGroups.AddRange(requirement.bodyPartGroupsMatchAny);
-                    }
-                }
-                if (royalTitle.def.requiredMinimumApparelQuality > qualityCategory)
-                {
-                    qualityCategory = royalTitle.def.requiredMinimumApparelQuality;
-                }
+                qualityCategory = royalTitle.def.requiredMinimumApparelQuality;
             }
             if (apparel.TryGetQuality(out var qc) && qc < qualityCategory) { score *= LowQualityApparelScoreFactor; }
-            if (apparel.def.apparel.bodyPartGroups.Any(bp => bodyPartGroups.Contains(bp)))
+        }
+
+        private static void ApplyRequirementScoring(Pawn pawn, Thing apparel, ref float score)
+        {
+            if (!pawn.apparel.AllRequirements.Any(ar => apparel.def.apparel.bodyPartGroups.Any(bpg =>
+                ar.requirement.bodyPartGroupsMatchAny.Contains(bpg)))) { return; }
+            var isRequired = false;
+            var isAllowed = false;
+            foreach (var allRequirement in pawn.apparel.AllRequirements)
             {
-                foreach (var item in requiredApparels) { allowedApparels.Remove(item); }
-                if (allowedApparels.Contains(apparel.def)) { score *= AllowedRoyaltyApparelScoreFactor; }
-                if (requiredApparels.Contains(apparel.def)) { score *= RequiredRoyaltyApparelScoreFactor; }
+                if (allRequirement.requirement.RequiredForPawn(pawn, apparel.def))
+                {
+                    isRequired = true;
+                    break;
+                }
+                if (allRequirement.requirement.AllowedForPawn(pawn, apparel.def)) { isAllowed = true; }
             }
+            if (isRequired) { score *= RequiredApparelScoreFactor; }
+            else if (isAllowed) { score *= AllowedApparelScoreFactor; }
+        }
+
+        private static void ApplySlaveScoring(Pawn pawn, Thing apparel, ref float score)
+        {
+            if (apparel.def.apparel.slaveApparel && !pawn.IsSlave) { score -= SlaveApparelScorePenalty; }
         }
 
         private static void ApplySpecialScoring(Apparel apparel, ref float score)
@@ -261,6 +270,11 @@ namespace DifferentlyOutfitted
             #endif
             score -= TaintedApparelScorePenalty;
             if (score > 0f) { score *= TaintedApparelScoreFactor; }
+        }
+
+        private static void ApplyVisionBlockingScoring(Thing apparel, ref float score)
+        {
+            if (apparel.def.apparel.blocksVision) { score -= VisionBlockingApparelScorePenalty; }
         }
     }
 }
