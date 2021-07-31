@@ -10,7 +10,7 @@ namespace DifferentlyOutfitted
 {
     public static class ApparelScoreCalculator
     {
-        private const float AllowedApparelScoreFactor = 10f;
+        private const float AllowedApparelScoreBonus = 100f;
         public const float ApparelTotalStatWeight = 10;
         private const float HumanLeatherScoreBonus = 0.2f;
         private const float HumanLeatherScoreFactor = 0.2f;
@@ -18,7 +18,7 @@ namespace DifferentlyOutfitted
         private const float IncorrectGenderApparelScoreFactor = 0.01f;
         private const float LowQualityApparelScoreFactor = 0.25f;
         private const float MaxInsulationScore = 2;
-        private const float RequiredApparelScoreFactor = 25f;
+        private const float RequiredApparelScoreBonus = 1000f;
         private const float SlaveApparelScorePenalty = 1.0f;
         private const float TaintedApparelScoreFactor = 0.2f;
         private const float TaintedApparelScorePenalty = 1.0f;
@@ -243,8 +243,8 @@ namespace DifferentlyOutfitted
                 }
                 if (allRequirement.requirement.AllowedForPawn(pawn, apparel.def)) { isAllowed = true; }
             }
-            if (isRequired) { score *= RequiredApparelScoreFactor; }
-            else if (isAllowed) { score *= AllowedApparelScoreFactor; }
+            if (isRequired) { score += RequiredApparelScoreBonus; }
+            else if (isAllowed) { score += AllowedApparelScoreBonus; }
         }
 
         private static void ApplySlaveScoring(Pawn pawn, Thing apparel, ref float score)
