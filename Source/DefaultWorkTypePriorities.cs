@@ -44,7 +44,7 @@ namespace DifferentlyOutfitted
                 StatPriorityHelper.SetDefaultStatPriority(priorities, StatDefOf.Mass, NegligibleNegative);
                 StatPriorityHelper.SetDefaultStatPriority(priorities, StatDefOf.PainShockThreshold, MinorPositive);
                 if (ModsConfig.ActiveModsInLoadOrder.Any(m =>
-                    "CETeam.CombatExtended".Equals(m.PackageId, StringComparison.OrdinalIgnoreCase)))
+                        "CETeam.CombatExtended".Equals(m.PackageId, StringComparison.OrdinalIgnoreCase)))
                 {
                     StatPriorityHelper.SetDefaultStatPriority(priorities, "CarryWeight", NegligiblePositive);
                     StatPriorityHelper.SetDefaultStatPriority(priorities, "CarryBulk", NegligiblePositive);
@@ -68,7 +68,7 @@ namespace DifferentlyOutfitted
                 StatPriorityHelper.SetDefaultStatPriority(priorities, StatDefOf.CarryingCapacity, MicroPositive);
                 StatPriorityHelper.SetDefaultStatPriority(priorities, StatDefOf.Mass, NegligibleNegative);
                 if (ModsConfig.ActiveModsInLoadOrder.Any(m =>
-                    "CETeam.CombatExtended".Equals(m.PackageId, StringComparison.OrdinalIgnoreCase)))
+                        "CETeam.CombatExtended".Equals(m.PackageId, StringComparison.OrdinalIgnoreCase)))
                 {
                     StatPriorityHelper.SetDefaultStatPriority(priorities, "CarryWeight", MicroPositive);
                     StatPriorityHelper.SetDefaultStatPriority(priorities, "CarryBulk", MicroPositive);
@@ -178,7 +178,7 @@ namespace DifferentlyOutfitted
                 StatPriorityHelper.SetDefaultStatPriority(priorities, StatDefOf.ArmorRating_Sharp, NegligiblePositive);
                 StatPriorityHelper.SetDefaultStatPriority(priorities, StatDefOf.Mass, NegligibleNegative);
                 if (ModsConfig.ActiveModsInLoadOrder.Any(m =>
-                    "CETeam.CombatExtended".Equals(m.PackageId, StringComparison.OrdinalIgnoreCase)))
+                        "CETeam.CombatExtended".Equals(m.PackageId, StringComparison.OrdinalIgnoreCase)))
                 {
                     StatPriorityHelper.SetDefaultStatPriority(priorities, "WornBulk", NegligibleNegative);
                 }
@@ -228,7 +228,7 @@ namespace DifferentlyOutfitted
                         BaseWorkerStatPriorities.Select(o => new StatPriority(o.Stat, o.Weight, o.Weight)));
                 StatPriorityHelper.SetDefaultStatPriority(priorities, StatDefOf.CarryingCapacity, MajorPositive);
                 if (ModsConfig.ActiveModsInLoadOrder.Any(m =>
-                    "CETeam.CombatExtended".Equals(m.PackageId, StringComparison.OrdinalIgnoreCase)))
+                        "CETeam.CombatExtended".Equals(m.PackageId, StringComparison.OrdinalIgnoreCase)))
                 {
                     StatPriorityHelper.SetDefaultStatPriority(priorities, "CarryWeight", MajorPositive);
                 }
@@ -350,7 +350,7 @@ namespace DifferentlyOutfitted
                 StatPriorityHelper.SetDefaultStatPriority(priorities, StatDefOf.TradePriceImprovement, MediumPositive);
                 StatPriorityHelper.SetDefaultStatPriority(priorities, StatDefOf.SocialImpact, MicroPositive);
                 if (ModsConfig.ActiveModsInLoadOrder.Any(m =>
-                    "CETeam.CombatExtended".Equals(m.PackageId, StringComparison.OrdinalIgnoreCase)))
+                        "CETeam.CombatExtended".Equals(m.PackageId, StringComparison.OrdinalIgnoreCase)))
                 {
                     StatPriorityHelper.SetDefaultStatPriority(priorities, "WornBulk", NegligibleNegative);
                 }

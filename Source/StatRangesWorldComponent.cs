@@ -15,9 +15,9 @@ namespace DifferentlyOutfitted
 
         public StatRangesWorldComponent(World world) : base(world)
         {
-            #if DEBUG
+#if DEBUG
             Log.Message("DifferentlyOutfitted: StatRanges world component created.", true);
-            #endif
+#endif
         }
 
         public override void ExposeData()
@@ -31,29 +31,29 @@ namespace DifferentlyOutfitted
             if (StatValues == null) { StatValues = new Dictionary<StatDef, FloatRange>(); }
             if (!StatValues.ContainsKey(stat))
             {
-                #if DEBUG
+#if DEBUG
                 Log.Message($"DifferentlyOutfitted: Initializing StatValues for '{stat.defName}'.", true);
-                #endif
+#endif
                 StatValues[stat] = new FloatRange(value, value);
             }
             var range = StatValues[stat];
             if (range.min > value)
             {
-                #if DEBUG
+#if DEBUG
                 Log.Message(
                     $"DifferentlyOutfitted: Updating StatMin for '{stat.defName}' from {range.min:N2} to {value:N2}.",
                     true);
-                #endif
+#endif
                 range.min = value;
                 StatValues[stat] = range;
             }
             if (range.max < value)
             {
-                #if DEBUG
+#if DEBUG
                 Log.Message(
                     $"DifferentlyOutfitted: Updating StatMax for '{stat.defName}' from {range.max:N2} to {value:N2}.",
                     true);
-                #endif
+#endif
                 range.max = value;
                 StatValues[stat] = range;
             }

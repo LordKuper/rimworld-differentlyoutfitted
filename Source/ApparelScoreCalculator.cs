@@ -52,9 +52,9 @@ namespace DifferentlyOutfitted
                 Log.ErrorOnce("DifferentlyOutfitted: Not an ExtendedOutfit, something went wrong.", 399441);
                 return 0f;
             }
-            #if DEBUG
+#if DEBUG
             Log.Message($"DifferentlyOutfitted: ----- '{pawn.Name}' - '{apparel.def.defName}' ({apparel.Label}) -----");
-            #endif
+#endif
             var statPriorities =
                 StatPriorityHelper.CalculateStatPriorities(pawn, outfit.StatPriorities, outfit.AutoWorkPriorities);
             var score = 0.1f + apparel.def.apparel.scoreOffset + ApparelScoreRawPriorities(apparel, statPriorities);
@@ -68,10 +68,10 @@ namespace DifferentlyOutfitted
             ApplyRequirementScoring(pawn, apparel, ref score);
             ApplyQualityScoring(pawn, apparel, ref score);
             ApplySlaveScoring(pawn, apparel, ref score);
-            #if DEBUG
+#if DEBUG
             Log.Message($"DifferentlyOutfitted: Total score of '{apparel.Label}' for pawn '{pawn.Name}' = {score:N2}");
             Log.Message("DifferentlyOutfitted: -----------------------------------------------------------------");
-            #endif
+#endif
             return score;
         }
 
@@ -88,19 +88,19 @@ namespace DifferentlyOutfitted
                 var normalizedValue = StatRanges.NormalizeStatValue(statPriority.Stat, valueDeviation);
                 var statScore = normalizedValue * statPriority.Weight;
                 statScores.Add(statPriority.Stat, statScore);
-                #if DEBUG
+#if DEBUG
                 if (Math.Abs(statScore) > 0.01)
                 {
                     var range = StatRanges.StatValues[statPriority.Stat];
                     Log.Message(
                         $"DifferentlyOutfitted: Value of '{statPriority.Stat}' ({statPriority.Weight:N2}) [{range.min:N2},{range.max:N2}] = {statValue:N2} + {statOffset:N2} = {totalValue:N2} ({valueDeviation:N2} dev) ({normalizedValue:N2} norm) ({statPriority.Stat.defaultBaseValue:N2} def) ({statScore:N2} score)");
                 }
-                #endif
+#endif
             }
             var apparelScore = !statScores.Any() ? 0 : statScores.Sum(pair => pair.Value);
-            #if DEBUG
+#if DEBUG
             Log.Message($"DifferentlyOutfitted: Stat score of {apparel.Label} = {apparelScore:N2}");
-            #endif
+#endif
             return apparelScore;
         }
 
@@ -117,9 +117,9 @@ namespace DifferentlyOutfitted
             if (!apparel.def.useHitPoints) { return; }
             var hitPointsScoreCoefficient =
                 HitPointsPercentScoreFactorCurve.Evaluate((float) apparel.HitPoints / apparel.MaxHitPoints);
-            #if DEBUG
+#if DEBUG
             Log.Message($"DifferentlyOutfitted: Hit point score coefficient = {hitPointsScoreCoefficient:N2}");
-            #endif
+#endif
             score *= hitPointsScoreCoefficient;
         }
 
@@ -128,92 +128,89 @@ namespace DifferentlyOutfitted
             if (apparel.Stuff != ThingDefOf.Human.race.leatherDef) { return; }
             if (ThoughtUtility.CanGetThought(pawn, ThoughtDefOf.HumanLeatherApparelSad))
             {
-                #if DEBUG
+#if DEBUG
                 Log.Message("DifferentlyOutfitted: Penalizing human leather apparel");
-                #endif
+#endif
                 score -= HumanLeatherScorePenalty;
                 if (score > 0f) { score *= HumanLeatherScoreFactor; }
             }
             if (ThoughtUtility.CanGetThought(pawn, ThoughtDefOf.HumanLeatherApparelHappy))
             {
-                #if DEBUG
+#if DEBUG
                 Log.Message("DifferentlyOutfitted: Promoting human leather apparel");
-                #endif
+#endif
                 score += HumanLeatherScoreBonus;
             }
         }
 
         private static void ApplyInsulationScoring(Pawn pawn, Apparel apparel, ExtendedOutfit outfit, ref float score)
         {
-            #if DEBUG
+#if DEBUG
             Log.Message("DifferentlyOutfitted: Calculating scores for insulation");
-            #endif
-            if (pawn.apparel.WornApparel.Contains(apparel)) { score += 0f; }
-            else
+#endif
+            if (pawn.apparel.WornApparel.Contains(apparel)) { return; }
+            var currentRange = pawn.ComfortableTemperatureRange();
+            var candidateRange = currentRange;
+            if (outfit.AutoTemp)
             {
-                var currentRange = pawn.ComfortableTemperatureRange();
-                var candidateRange = currentRange;
-                if (outfit.AutoTemp)
-                {
-                    var seasonalTemp = pawn.Map.mapTemperature.SeasonalTemp;
-                    outfit.targetTemperatures = new FloatRange(seasonalTemp - outfit.autoTempOffset,
-                        seasonalTemp + outfit.autoTempOffset);
-                }
-                var targetRange = outfit.targetTemperatures;
-                var apparelOffset = new FloatRange(-apparel.GetStatValue(StatDefOf.Insulation_Cold),
-                    apparel.GetStatValue(StatDefOf.Insulation_Heat));
-                candidateRange.min += apparelOffset.min;
-                candidateRange.max += apparelOffset.max;
-                foreach (var wornApparel in pawn.apparel.WornApparel.Where(wornApparel =>
-                    !ApparelUtility.CanWearTogether(apparel.def, wornApparel.def, pawn.RaceProps.body)))
-                {
-                    var wornInsulationRange = new FloatRange(-wornApparel.GetStatValue(StatDefOf.Insulation_Cold),
-                        wornApparel.GetStatValue(StatDefOf.Insulation_Heat));
-                    candidateRange.min -= wornInsulationRange.min;
-                    candidateRange.max -= wornInsulationRange.max;
-                }
-                var insulationScore = 0f;
-                var coldBenefit = candidateRange.min < currentRange.min
-                    ? currentRange.min <= targetRange.min
-                        ? 0
-                        :
-                        candidateRange.min <= targetRange.min && currentRange.min > targetRange.min
-                            ?
-                            currentRange.min - targetRange.min
-                            : currentRange.min - candidateRange.min
+                var seasonalTemp = pawn.Map.mapTemperature.SeasonalTemp;
+                outfit.targetTemperatures = new FloatRange(seasonalTemp - outfit.autoTempOffset,
+                    seasonalTemp + outfit.autoTempOffset);
+            }
+            var targetRange = outfit.targetTemperatures;
+            candidateRange.min += -apparel.GetStatValue(StatDefOf.Insulation_Cold) +
+                apparel.GetStatValue(StatDefOf.ComfyTemperatureMin);
+            candidateRange.max += apparel.GetStatValue(StatDefOf.Insulation_Heat) +
+                apparel.GetStatValue(StatDefOf.ComfyTemperatureMax);
+            foreach (var wornApparel in pawn.apparel.WornApparel.Where(wornApparel =>
+                         !ApparelUtility.CanWearTogether(apparel.def, wornApparel.def, pawn.RaceProps.body)))
+            {
+                var wornInsulationRange = new FloatRange(-wornApparel.GetStatValue(StatDefOf.Insulation_Cold),
+                    wornApparel.GetStatValue(StatDefOf.Insulation_Heat));
+                candidateRange.min -= wornInsulationRange.min;
+                candidateRange.max -= wornInsulationRange.max;
+            }
+            var insulationScore = 0f;
+            var coldBenefit = candidateRange.min < currentRange.min
+                ? currentRange.min <= targetRange.min
+                    ? 0
                     :
-                    candidateRange.min <= targetRange.min
-                        ? 0
-                        :
-                        currentRange.min <= targetRange.min && candidateRange.min > targetRange.min
-                            ?
-                            targetRange.min - candidateRange.min
-                            : currentRange.min - candidateRange.min;
-                insulationScore += InsulationScoreCurve.Evaluate(coldBenefit);
-                var heatBenefit = candidateRange.max < currentRange.max
-                    ? currentRange.max < targetRange.max
+                    candidateRange.min <= targetRange.min && currentRange.min > targetRange.min
                         ?
-                        candidateRange.max - currentRange.max
-                        : candidateRange.max < targetRange.max && currentRange.max >= targetRange.max
-                            ? candidateRange.max - targetRange.max
-                            : 0
+                        currentRange.min - targetRange.min
+                        : currentRange.min - candidateRange.min
+                :
+                candidateRange.min <= targetRange.min
+                    ? 0
                     :
-                    candidateRange.max < targetRange.max
-                        ? candidateRange.max - currentRange.max
-                        :
-                        currentRange.max < targetRange.max && candidateRange.max >= targetRange.max
-                            ?
-                            targetRange.max - currentRange.max
-                            : 0;
-                insulationScore += InsulationScoreCurve.Evaluate(heatBenefit);
-                #if DEBUG
+                    currentRange.min <= targetRange.min && candidateRange.min > targetRange.min
+                        ?
+                        targetRange.min - candidateRange.min
+                        : currentRange.min - candidateRange.min;
+            insulationScore += InsulationScoreCurve.Evaluate(coldBenefit);
+            var heatBenefit = candidateRange.max < currentRange.max
+                ? currentRange.max < targetRange.max
+                    ?
+                    candidateRange.max - currentRange.max
+                    : candidateRange.max < targetRange.max && currentRange.max >= targetRange.max
+                        ? candidateRange.max - targetRange.max
+                        : 0
+                :
+                candidateRange.max < targetRange.max
+                    ? candidateRange.max - currentRange.max
+                    :
+                    currentRange.max < targetRange.max && candidateRange.max >= targetRange.max
+                        ?
+                        targetRange.max - currentRange.max
+                        : 0;
+            insulationScore += InsulationScoreCurve.Evaluate(heatBenefit);
+#if DEBUG
                 Log.Message(
                     $"DifferentlyOutfitted: target range: {targetRange}, current range: {currentRange}, candidate range: {candidateRange}");
                 Log.Message(
                     $"DifferentlyOutfitted: cold benefit = {coldBenefit:N2}, heat benefit = {heatBenefit:N2}), insulation score = {insulationScore:N2}");
-                #endif
-                score += insulationScore;
-            }
+#endif
+            score += insulationScore;
         }
 
         private static void ApplyQualityScoring(Pawn pawn, Thing apparel, ref float score)
@@ -221,7 +218,7 @@ namespace DifferentlyOutfitted
             if (pawn.royalty == null || !pawn.royalty.AllTitlesInEffectForReading.Any()) { return; }
             var qualityCategory = QualityCategory.Awful;
             foreach (var royalTitle in pawn.royalty.AllTitlesInEffectForReading.Where(royalTitle =>
-                royalTitle.def.requiredMinimumApparelQuality > qualityCategory))
+                         royalTitle.def.requiredMinimumApparelQuality > qualityCategory))
             {
                 qualityCategory = royalTitle.def.requiredMinimumApparelQuality;
             }
@@ -231,7 +228,7 @@ namespace DifferentlyOutfitted
         private static void ApplyRequirementScoring(Pawn pawn, Thing apparel, ref float score)
         {
             if (!pawn.apparel.AllRequirements.Any(ar => apparel.def.apparel.bodyPartGroups.Any(bpg =>
-                ar.requirement.bodyPartGroupsMatchAny.Contains(bpg)))) { return; }
+                    ar.requirement.bodyPartGroupsMatchAny.Contains(bpg)))) { return; }
             var isRequired = false;
             var isAllowed = false;
             foreach (var allRequirement in pawn.apparel.AllRequirements)
@@ -255,9 +252,9 @@ namespace DifferentlyOutfitted
         private static void ApplySpecialScoring(Apparel apparel, ref float score)
         {
             var specialApparelScoreOffset = apparel.GetSpecialApparelScoreOffset();
-            #if DEBUG
+#if DEBUG
             Log.Message($"DifferentlyOutfitted: Special apparel score offset = {specialApparelScoreOffset:N2}");
-            #endif
+#endif
             score += specialApparelScoreOffset;
         }
 
@@ -265,9 +262,9 @@ namespace DifferentlyOutfitted
         {
             if (!outfit.PenaltyWornByCorpse || !apparel.WornByCorpse ||
                 !ThoughtUtility.CanGetThought(pawn, ThoughtDefOf.DeadMansApparel)) { return; }
-            #if DEBUG
+#if DEBUG
             Log.Message("DifferentlyOutfitted: Penalizing tainted apparel");
-            #endif
+#endif
             score -= TaintedApparelScorePenalty;
             if (score > 0f) { score *= TaintedApparelScoreFactor; }
         }

@@ -12,12 +12,9 @@ namespace DifferentlyOutfitted.Patches
     [HarmonyPatch(typeof(WorkPriorities))]
     public static class WorkPrioritiesPatch
     {
-        [SuppressMessage("ReSharper", "RedundantAssignment")]
-        [SuppressMessage("ReSharper", "InconsistentNaming")]
-        [SuppressMessage("ReSharper", "IdentifierTypo")]
-        [UsedImplicitly]
-        [HarmonyPatch("DefaultPriorities")]
-        [HarmonyPrefix]
+        [SuppressMessage("ReSharper", "RedundantAssignment"), SuppressMessage("ReSharper", "InconsistentNaming"),
+         SuppressMessage("ReSharper", "IdentifierTypo"), UsedImplicitly, HarmonyPatch("DefaultPriorities"),
+         HarmonyPrefix]
         private static bool DefaultPrioritiesPrefix(ref List<StatPriority> __result, WorkTypeDef worktype)
         {
             if (worktype == WorkTypeDefOf.Art)
@@ -113,12 +110,9 @@ namespace DifferentlyOutfitted.Patches
             return true;
         }
 
-        [SuppressMessage("ReSharper", "RedundantAssignment")]
-        [SuppressMessage("ReSharper", "InconsistentNaming")]
-        [SuppressMessage("ReSharper", "IdentifierTypo")]
-        [UsedImplicitly]
-        [HarmonyPatch(nameof(WorkPriorities.WorktypeStatPriorities), typeof(Pawn))]
-        [HarmonyPrefix]
+        [SuppressMessage("ReSharper", "RedundantAssignment"), SuppressMessage("ReSharper", "InconsistentNaming"),
+         SuppressMessage("ReSharper", "IdentifierTypo"), UsedImplicitly,
+         HarmonyPatch(nameof(WorkPriorities.WorktypeStatPriorities), typeof(Pawn)), HarmonyPrefix]
         private static bool WorktypeStatPrioritiesPrefix(ref List<StatPriority> __result, Pawn pawn)
         {
             if (pawn == null) { throw new ArgumentNullException(nameof(pawn)); }
