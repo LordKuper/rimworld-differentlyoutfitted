@@ -162,13 +162,17 @@ namespace DifferentlyOutfitted
                 apparel.GetStatValue(StatDefOf.ComfyTemperatureMin);
             candidateRange.max += apparel.GetStatValue(StatDefOf.Insulation_Heat) +
                 apparel.GetStatValue(StatDefOf.ComfyTemperatureMax);
+#if DEBUG
+            Log.Message(
+                $"DifferentlyOutfitted: ComfyTemperatureMin = {apparel.GetStatValue(StatDefOf.ComfyTemperatureMin)}, ComfyTemperatureMax = {apparel.GetStatValue(StatDefOf.ComfyTemperatureMax)}");
+#endif
             foreach (var wornApparel in pawn.apparel.WornApparel.Where(wornApparel =>
                          !ApparelUtility.CanWearTogether(apparel.def, wornApparel.def, pawn.RaceProps.body)))
             {
-                var wornInsulationRange = new FloatRange(-wornApparel.GetStatValue(StatDefOf.Insulation_Cold),
-                    wornApparel.GetStatValue(StatDefOf.Insulation_Heat));
-                candidateRange.min -= wornInsulationRange.min;
-                candidateRange.max -= wornInsulationRange.max;
+                candidateRange.min -= -wornApparel.GetStatValue(StatDefOf.Insulation_Cold) +
+                    wornApparel.GetStatValue(StatDefOf.ComfyTemperatureMin);
+                candidateRange.max -= wornApparel.GetStatValue(StatDefOf.Insulation_Heat) +
+                    wornApparel.GetStatValue(StatDefOf.ComfyTemperatureMax);
             }
             var insulationScore = 0f;
             var coldBenefit = candidateRange.min < currentRange.min
@@ -205,10 +209,10 @@ namespace DifferentlyOutfitted
                         : 0;
             insulationScore += InsulationScoreCurve.Evaluate(heatBenefit);
 #if DEBUG
-                Log.Message(
-                    $"DifferentlyOutfitted: target range: {targetRange}, current range: {currentRange}, candidate range: {candidateRange}");
-                Log.Message(
-                    $"DifferentlyOutfitted: cold benefit = {coldBenefit:N2}, heat benefit = {heatBenefit:N2}), insulation score = {insulationScore:N2}");
+            Log.Message(
+                $"DifferentlyOutfitted: target range: {targetRange}, current range: {currentRange}, candidate range: {candidateRange}");
+            Log.Message(
+                $"DifferentlyOutfitted: cold benefit = {coldBenefit:N2}, heat benefit = {heatBenefit:N2}), insulation score = {insulationScore:N2}");
 #endif
             score += insulationScore;
         }

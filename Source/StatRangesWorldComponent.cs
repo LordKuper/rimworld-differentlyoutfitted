@@ -16,7 +16,7 @@ namespace DifferentlyOutfitted
         public StatRangesWorldComponent(World world) : base(world)
         {
 #if DEBUG
-            Log.Message("DifferentlyOutfitted: StatRanges world component created.", true);
+            Log.Message("DifferentlyOutfitted: StatRanges world component created.");
 #endif
         }
 
@@ -32,7 +32,7 @@ namespace DifferentlyOutfitted
             if (!StatValues.ContainsKey(stat))
             {
 #if DEBUG
-                Log.Message($"DifferentlyOutfitted: Initializing StatValues for '{stat.defName}'.", true);
+                Log.Message($"DifferentlyOutfitted: Initializing StatValues for '{stat.defName}'.");
 #endif
                 StatValues[stat] = new FloatRange(value, value);
             }
@@ -41,8 +41,7 @@ namespace DifferentlyOutfitted
             {
 #if DEBUG
                 Log.Message(
-                    $"DifferentlyOutfitted: Updating StatMin for '{stat.defName}' from {range.min:N2} to {value:N2}.",
-                    true);
+                    $"DifferentlyOutfitted: Updating StatMin for '{stat.defName}' from {range.min:N2} to {value:N2}.");
 #endif
                 range.min = value;
                 StatValues[stat] = range;
@@ -51,8 +50,7 @@ namespace DifferentlyOutfitted
             {
 #if DEBUG
                 Log.Message(
-                    $"DifferentlyOutfitted: Updating StatMax for '{stat.defName}' from {range.max:N2} to {value:N2}.",
-                    true);
+                    $"DifferentlyOutfitted: Updating StatMax for '{stat.defName}' from {range.max:N2} to {value:N2}.");
 #endif
                 range.max = value;
                 StatValues[stat] = range;
