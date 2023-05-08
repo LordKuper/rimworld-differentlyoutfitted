@@ -18,11 +18,12 @@ namespace DifferentlyOutfitted
         private const float IncorrectGenderApparelScoreFactor = 0.01f;
         private const float LowQualityApparelScoreFactor = 0.25f;
         private const float MaxInsulationScore = 2;
+        private const float MechanitorApparelScorePenalty = 100.0f;
         private const float RequiredApparelScoreBonus = 1000f;
-        private const float SlaveApparelScorePenalty = 1.0f;
+        private const float SlaveApparelScorePenalty = 100.0f;
         private const float TaintedApparelScoreFactor = 0.2f;
-        private const float TaintedApparelScorePenalty = 1.0f;
-        private const float VisionBlockingApparelScorePenalty = 1.0f;
+        private const float TaintedApparelScorePenalty = 10.0f;
+        private const float VisionBlockingApparelScorePenalty = 10.0f;
 
         private static readonly SimpleCurve HitPointsPercentScoreFactorCurve = new SimpleCurve
         {
@@ -68,6 +69,7 @@ namespace DifferentlyOutfitted
             ApplyRequirementScoring(pawn, apparel, ref score);
             ApplyQualityScoring(pawn, apparel, ref score);
             ApplySlaveScoring(pawn, apparel, ref score);
+            ApplyMechanitorScoring(pawn, apparel, ref score);
 #if DEBUG
             Log.Message($"DifferentlyOutfitted: Total score of '{apparel.Label}' for pawn '{pawn.Name}' = {score:N2}");
             Log.Message("DifferentlyOutfitted: -----------------------------------------------------------------");
@@ -215,6 +217,14 @@ namespace DifferentlyOutfitted
                 $"DifferentlyOutfitted: cold benefit = {coldBenefit:N2}, heat benefit = {heatBenefit:N2}), insulation score = {insulationScore:N2}");
 #endif
             score += insulationScore;
+        }
+
+        private static void ApplyMechanitorScoring(Pawn pawn, Thing apparel, ref float score)
+        {
+            if (apparel.def.apparel.mechanitorApparel && pawn.mechanitor == null)
+            {
+                score -= MechanitorApparelScorePenalty;
+            }
         }
 
         private static void ApplyQualityScoring(Pawn pawn, Thing apparel, ref float score)

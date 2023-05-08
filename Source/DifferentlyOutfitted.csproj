@@ -63,7 +63,7 @@
     <Compile Include="DefaultWorkTypePriorities.cs" />
     <Compile Include="DifferentlyOutfittedMod.cs" />
     <Compile Include="Patches\OutfittedOverlayPatch.cs" />
-    <Compile Include="Patches\OutfittedModPatch.cs" />
+    <Compile Include="Patches\ApparelScorePatch.cs" />
     <Compile Include="Patches\WorkPrioritiesPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StatPriorityHelper.cs" />
